@@ -7,20 +7,125 @@ import {
   Image as ImageIcon, Plus, Trash2, Send, CheckCircle, Download, File, AlertCircle, XCircle, Paperclip
 } from 'lucide-react';
 
-//// --- MOCK DATA (Туршилтын өгөгдөл) ---
-const INITIAL_STUDENTS = [
+// Төрлүүдийг (Interfaces) тодорхойлох
+interface StudentData {
+  id: number;
+  firstName: string;
+  lastName: string;
+  stCode: string;
+  prCode: string;
+  regNo: string;
+  phone: string;
+  pPhone: string;
+}
+
+interface NewsItem {
+  id: number;
+  title: string;
+  content: string;
+  date: string;
+  time: string;
+}
+
+interface NoteItem {
+  id: number;
+  title: string;
+  content: string;
+  isDone: boolean;
+  date: string;
+}
+
+interface AttendanceRecord {
+  status: string;
+  reason: string;
+}
+
+interface DailyAttendance {
+  date: string;
+  records: Record<number, AttendanceRecord>;
+}
+
+interface LeaveRequest {
+  id: number;
+  stId: number | null;
+  date: string;
+  reason: string;
+  status: string;
+}
+
+interface TaskItem {
+  id: number;
+  title: string;
+  date: string;
+  showStudents: boolean;
+}
+
+interface Submission {
+  id: number;
+  studentId: number;
+  type: string;
+  refId: number;
+  status: string;
+}
+
+interface ChatMessage {
+  id: number;
+  text: string;
+  sender: string;
+  role: string;
+  time: string;
+}
+
+interface ReportItem {
+  id: number;
+  title: string;
+  desc: string;
+  author: string;
+  date: string;
+  image: string | null;
+  file: string | null;
+  fileName: string;
+}
+
+interface PhotoItem {
+  id: number;
+  src: string;
+  desc: string;
+  uploader: string;
+}
+
+interface AlbumItem {
+  id: number;
+  name: string;
+  creator: string;
+  photos: PhotoItem[];
+}
+
+interface UserState {
+  role: string;
+  name: string;
+  data: StudentData | null;
+}
+
+interface ToastState {
+  msg: string;
+  type: string;
+}
+
+//// --- MOCK DATA ---
+const INITIAL_STUDENTS: StudentData[] = [
   { id: 1, firstName: 'Анар', lastName: 'Баттөр', stCode: 'S01', prCode: 'P01', regNo: 'УЗ10203040', phone: '99887766', pPhone: '88776655' },
   { id: 2, firstName: 'Бат-Эрдэнэ', lastName: 'Сүхээ', stCode: 'S02', prCode: 'P02', regNo: 'УЗ11223344', phone: '99112233', pPhone: '88112233' },
   { id: 3, firstName: 'Саран', lastName: 'Ганболд', stCode: 'S03', prCode: 'P03', regNo: 'УЗ15253545', phone: '99554433', pPhone: '88443322' }
 ];
 
 const INITIAL_SCHEDULE = {
-  shift1: Array(5).fill(Array(7).fill("")),
-  shift2: Array(5).fill(Array(7).fill(""))
+  shift1: Array(5).fill(Array(7).fill("")) as string[][],
+  shift2: Array(5).fill(Array(7).fill("")) as string[][]
 };
 const DAYS = ["Даваа", "Мягмар", "Лхагва", "Пүрэв", "Баасан"];
 
-const INITIAL_CHAT = {
+const INITIAL_CHAT: Record<string, ChatMessage[]> = {
   student: [
     { id: 1, text: 'Сайн байна уу, маргаашийн хичээл хэдээс орох вэ?', sender: 'Анар (Сурагч)', role: 'student', time: '09:15' },
     { id: 2, text: 'Маргааш 08:00 цагаас орно. Хоцрохгүй ирээрэй.', sender: 'Ангийн багш', role: 'teacher', time: '09:20' }
@@ -31,71 +136,61 @@ const INITIAL_CHAT = {
 };
 
 export default function SchoolSystem() {
-  // Системийн төлөвүүд
-  const [user, setUser] = useState(null); // null, {role: 'teacher'|'student'|'parent', name, data}
-  const [activeTab, setActiveTab] = useState('Мэдээлэл');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [toast, setToast] = useState(null);
-  const scrollRef = useRef(null);
+  const [user, setUser] = useState<UserState | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('Мэдээлэл');
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+  const [toast, setToast] = useState<ToastState | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Өгөгдлийн төлөвүүд
-  const [students, setStudents] = useState(INITIAL_STUDENTS);
-  const [news, setNews] = useState([]);
-  const [notes, setNotes] = useState([{id: 1, title: 'Жишээ тэмдэглэл', content: 'Эцэг эхийн хурал хийх', isDone: false, date: '2026-08-30'}]);
+  const [students, setStudents] = useState<StudentData[]>(INITIAL_STUDENTS);
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [notes, setNotes] = useState<NoteItem[]>([{id: 1, title: 'Жишээ тэмдэглэл', content: 'Эцэг эхийн хурал хийх', isDone: false, date: '2026-08-30'}]);
   
-  // Ирц: { date: 'YYYY-MM-DD', records: { studentId: {status: 'present|absent|late|sick|leave', reason: ''} } }
-  const [attendance, setAttendance] = useState([
+  const [attendance, setAttendance] = useState<DailyAttendance[]>([
     { date: new Date().toISOString().split('T')[0], records: { 1: {status: 'present', reason: ''}, 2: {status: 'absent', reason: 'Өвчтэй'} } }
   ]);
-  const [leaveRequests, setLeaveRequests] = useState([
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([
      { id: 1, stId: 3, date: new Date().toISOString().split('T')[0], reason: 'Эмнэлэг явах', status: 'pending' }
   ]);
   
   const [schedule, setSchedule] = useState(INITIAL_SCHEDULE);
-  const [dutySchedule, setDutySchedule] = useState({ weekdays: { "Даваа": [], "Мягмар": [], "Лхагва": [], "Пүрэв": [], "Баасан": [] }, currentDeepClean: "", deepCleanArchives: [] });
+  const [dutySchedule, setDutySchedule] = useState({ weekdays: { "Даваа": [], "Мягмар": [], "Лхагва": [], "Пүрэв": [], "Баасан": [] } as Record<string, string[]>, currentDeepClean: "", deepCleanArchives: [] as {date: string, names: string}[] });
   
-  const [subjects, setSubjects] = useState(['Математик', 'Монгол хэл', 'Англи хэл']);
-  // grades: { studentId: { subjectName: number } }
-  const [grades, setGrades] = useState({
+  const [subjects, setSubjects] = useState<string[]>(['Математик', 'Монгол хэл', 'Англи хэл']);
+  const [grades, setGrades] = useState<Record<number, Record<string, number | null>>>({
     1: {'Математик': 85, 'Монгол хэл': 70, 'Англи хэл': 95},
     2: {'Математик': 45, 'Монгол хэл': 50, 'Англи хэл': 60}
   });
-  const [editingGrades, setEditingGrades] = useState({});
-  const [showAddSubj, setShowAddSubj] = useState(false);
-  const [newSubjName, setNewSubjName] = useState('');
-  const [attTab, setAttTab] = useState('daily');
-  const [attSummaryFilter, setAttSummaryFilter] = useState('month');
-  const [attDate, setAttDate] = useState(new Date().toISOString().split('T')[0]);
-  const [editingNoteId, setEditingNoteId] = useState(null);
-  const [editNoteData, setEditNoteData] = useState({title: '', content: ''});
+  const [editingGrades, setEditingGrades] = useState<Record<number, boolean>>({});
+  const [showAddSubj, setShowAddSubj] = useState<boolean>(false);
+  const [newSubjName, setNewSubjName] = useState<string>('');
+  const [attTab, setAttTab] = useState<string>('daily');
+  const [attSummaryFilter, setAttSummaryFilter] = useState<string>('month');
+  const [attDate, setAttDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [editNoteData, setEditNoteData] = useState<{title: string, content: string}>({title: '', content: ''});
 
-  const [tasks, setTasks] = useState([]);
-  const [savings, setSavings] = useState([]);
-  const [submissions, setSubmissions] = useState([]); // { id, studentId, type(task/saving), refId, status(pending/approved) }
+  const [tasks, setTasks] = useState<TaskItem[]>([]);
+  const [savings, setSavings] = useState<TaskItem[]>([]);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   
-  const [chatMessages, setChatMessages] = useState(INITIAL_CHAT);
-  const [chatInput, setChatInput] = useState('');
-  const [activeChat, setActiveChat] = useState('student');
+  const [chatMessages, setChatMessages] = useState<Record<string, ChatMessage[]>>(INITIAL_CHAT);
+  const [chatInput, setChatInput] = useState<string>('');
+  const [activeChat, setActiveChat] = useState<string>('student');
   
-  const [reports, setReports] = useState([]);
-  const [newReportFiles, setNewReportFiles] = useState({ image: null, file: null, fileName: '' });
-  const [albums, setAlbums] = useState([]);
-  const [expandedImage, setExpandedImage] = useState(null);
-  const [showAlbumModal, setShowAlbumModal] = useState(false);
-  const [newAlbumName, setNewAlbumName] = useState('');
+  const [reports, setReports] = useState<ReportItem[]>([]);
+  const [newReportFiles, setNewReportFiles] = useState<{image: string | null, file: string | null, fileName: string}>({ image: null, file: null, fileName: '' });
+  const [albums, setAlbums] = useState<AlbumItem[]>([]);
+  const [expandedImage, setExpandedImage] = useState<any>(null); // any used here for brevity, ideally PhotoItem
+  const [showAlbumModal, setShowAlbumModal] = useState<boolean>(false);
+  const [newAlbumName, setNewAlbumName] = useState<string>('');
 
-  const showToast = (msg, type = 'success') => {
+  const showToast = (msg: string, type: string = 'success') => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  const getStudentName = (id) => {
-    const st = students.find(s => s.id === id);
-    return st ? `${st.firstName} (${st.lastName.charAt(0)})` : 'Мэдэгдэхгүй';
-  };
-
-  // Үнэлгээний түвшин бодох (I - VIII)
-  const getGradeLevel = (avg) => {
+  const getGradeLevel = (avg: number | null | undefined) => {
     if(avg == null || isNaN(avg)) return '-';
     if(avg >= 90) return 'VIII';
     if(avg >= 80) return 'VII';
@@ -113,7 +208,7 @@ export default function SchoolSystem() {
     const [error, setError] = useState('');
     const [loginRole, setLoginRole] = useState('student');
 
-    const handleLogin = (e) => {
+    const handleLogin = (e: React.FormEvent) => {
       e.preventDefault();
       if (loginRole === 'teacher') {
         if (code === '1125') {
@@ -192,7 +287,7 @@ export default function SchoolSystem() {
   };
 
   const isTeacher = user?.role === 'teacher';
-  const myStId = user?.role === 'student' || user?.role === 'parent' ? user.data.id : null;
+  const myStId = (user?.role === 'student' || user?.role === 'parent') && user.data ? user.data.id : null;
 
   const MENUS = [
     { name: 'Мэдээлэл', icon: FileText, show: true },
@@ -209,12 +304,10 @@ export default function SchoolSystem() {
     { name: 'Зургийн цомог', icon: ImageIcon, show: true },
   ].filter(m => m.show);
 
-  // Сурагчдыг цагаан толгойн дарааллаар эрэмбэлэх
   const sortedStudents = useMemo(() => {
     return [...students].sort((a, b) => a.firstName.localeCompare(b.firstName));
   }, [students]);
 
-  // Анхны ачаалал үед зөв таб сонгох
   useEffect(() => {
     if (!user) return;
     const canSeeStudentChat = user.role === 'teacher' || user.role === 'student';
@@ -224,21 +317,28 @@ export default function SchoolSystem() {
     if(!canSeeParentChat && activeChat === 'parent') setActiveChat('student');
   }, [user, activeChat]);
 
-  // Хэрэглэгч нэвтрээгүй бол Login хуудас харуулна
   if (!user) return <LoginScreen />;
 
   const renderNews = () => {
-    const addNews = (e) => {
+    const addNews = (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      const newM = {
+      const target = e.target as typeof e.target & {
+        title: { value: string };
+        content: { value: string };
+        date: { value: string };
+        time: { value: string };
+        reset: () => void;
+      };
+      
+      const newM: NewsItem = {
         id: Date.now(),
-        title: e.target.title.value,
-        content: e.target.content.value,
-        date: e.target.date.value,
-        time: e.target.time.value
+        title: target.title.value,
+        content: target.content.value,
+        date: target.date.value,
+        time: target.time.value
       };
       setNews([newM, ...news]);
-      e.target.reset();
+      target.reset();
       showToast('Мэдээлэл нэмэгдлээ');
     };
 
@@ -248,7 +348,7 @@ export default function SchoolSystem() {
         {isTeacher && (
           <form onSubmit={addNews} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
             <input type="text" name="title" placeholder="Гарчиг" required className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-blue-400"/>
-            <textarea name="content" placeholder="Дэлгэрэнгүй..." required rows="3" className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+            <textarea name="content" placeholder="Дэлгэрэнгүй..." required rows={3} className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-blue-400"></textarea>
             <div className="flex gap-4">
               <input type="date" name="date" required className="flex-1 p-3 border rounded-xl bg-gray-50 outline-none"/>
               <input type="time" name="time" required className="flex-1 p-3 border rounded-xl bg-gray-50 outline-none"/>
@@ -276,28 +376,33 @@ export default function SchoolSystem() {
   };
 
   const renderNotes = () => {
-    const addNote = (e) => {
+    const addNote = (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      const title = e.target.title.value.trim();
-      const content = e.target.content.value.trim();
+      const target = e.target as typeof e.target & {
+        title: { value: string };
+        content: { value: string };
+        reset: () => void;
+      };
+      const title = target.title.value.trim();
+      const content = target.content.value.trim();
       if (!title || !content) return;
       
-      const newN = { id: Date.now(), title, content, isDone: false, date: new Date().toLocaleDateString() };
+      const newN: NoteItem = { id: Date.now(), title, content, isDone: false, date: new Date().toLocaleDateString() };
       setNotes([newN, ...notes]);
-      e.target.reset();
+      target.reset();
       showToast('Тэмдэглэл нэмэгдлээ');
     };
 
-    const toggleNote = (id) => {
+    const toggleNote = (id: number) => {
       setNotes(notes.map(n => n.id === id ? {...n, isDone: !n.isDone} : n));
     };
 
-    const startEditNote = (note) => {
+    const startEditNote = (note: NoteItem) => {
       setEditingNoteId(note.id);
       setEditNoteData({title: note.title, content: note.content});
     };
 
-    const saveEditNote = (id) => {
+    const saveEditNote = (id: number) => {
       setNotes(notes.map(n => n.id === id ? {...n, title: editNoteData.title, content: editNoteData.content} : n));
       setEditingNoteId(null);
       showToast('Амжилттай заслаа');
@@ -308,7 +413,7 @@ export default function SchoolSystem() {
         <h2 className="text-2xl font-bold text-gray-800 border-b pb-4">Багшийн тэмдэглэл</h2>
         <form onSubmit={addNote} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
           <input type="text" name="title" placeholder="Тэмдэглэлийн гарчиг" required className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-blue-400"/>
-          <textarea name="content" placeholder="Агуулга..." required rows="2" className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+          <textarea name="content" placeholder="Агуулга..." required rows={2} className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-blue-400"></textarea>
           <button type="submit" className="bg-gray-800 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-gray-900 transition shadow-md">Хадгалах</button>
         </form>
         
@@ -320,7 +425,7 @@ export default function SchoolSystem() {
                   {editingNoteId === n.id ? (
                      <div className="space-y-2 w-full">
                        <input type="text" value={editNoteData.title} onChange={e=>setEditNoteData({...editNoteData, title: e.target.value})} className="w-full p-2 rounded-lg border"/>
-                       <textarea value={editNoteData.content} onChange={e=>setEditNoteData({...editNoteData, content: e.target.value})} className="w-full p-2 rounded-lg border" rows="2"></textarea>
+                       <textarea value={editNoteData.content} onChange={e=>setEditNoteData({...editNoteData, content: e.target.value})} className="w-full p-2 rounded-lg border" rows={2}></textarea>
                        <div className="flex gap-2">
                          <button onClick={() => saveEditNote(n.id)} className="bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold">Хадгалах</button>
                          <button onClick={() => setEditingNoteId(null)} className="bg-gray-400 text-white px-3 py-1.5 rounded-lg text-sm font-bold">Цуцлах</button>
@@ -401,7 +506,7 @@ export default function SchoolSystem() {
       currAtt = { date: attDate, records: {} };
     }
 
-    const handleMark = (stId, status, reason = '') => {
+    const handleMark = (stId: number, status: string, reason = '') => {
        if(!isTeacher) return;
        
        setAttendance(prev => {
@@ -423,30 +528,35 @@ export default function SchoolSystem() {
        });
     };
 
-    const submitLeaveRequest = (e) => {
+    const submitLeaveRequest = (e: React.FormEvent<HTMLFormElement>) => {
        e.preventDefault();
-       const newReq = {
+       const target = e.target as typeof e.target & {
+         date: { value: string };
+         reason: { value: string };
+         reset: () => void;
+       };
+       const newReq: LeaveRequest = {
          id: Date.now(),
          stId: myStId,
-         date: e.target.date.value,
-         reason: e.target.reason.value,
+         date: target.date.value,
+         reason: target.reason.value,
          status: 'pending'
        };
        setLeaveRequests([newReq, ...leaveRequests]);
-       e.target.reset();
+       target.reset();
        showToast("Чөлөөний хүсэлт илгээгдлээ");
     };
 
-    // Нэгтгэл бодох
     const getSummary = () => {
-      let filteredAtt = attendance; // Бодит байдалд date-ээр шүүнэ (долоо хоног, сар г.м)
-      let sum = {};
+      let filteredAtt = attendance; 
+      let sum: Record<number, any> = {};
       sortedStudents.forEach(s => {
         sum[s.id] = { present:0, absent:0, late:0, sick:0, leave:0, total: 0 };
       });
       
       filteredAtt.forEach(day => {
-        Object.entries(day.records).forEach(([sId, rec]) => {
+        Object.entries(day.records).forEach(([sIdStr, rec]) => {
+           const sId = Number(sIdStr);
            if(sum[sId] && sum[sId][rec.status] !== undefined) {
              sum[sId][rec.status]++;
              sum[sId].total++;
@@ -492,11 +602,11 @@ export default function SchoolSystem() {
                     return (
                       <tr key={s.id} className="border-b hover:bg-gray-50">
                         <td className="p-4 font-medium">{s.lastName.charAt(0)}. {s.firstName}</td>
-                        <td className="p-4 text-center font-bold text-green-600">{stats.present}</td>
-                        <td className="p-4 text-center font-bold text-red-500">{stats.absent}</td>
-                        <td className="p-4 text-center font-bold text-yellow-600">{stats.late}</td>
-                        <td className="p-4 text-center font-bold text-purple-600">{stats.sick}</td>
-                        <td className="p-4 text-center font-bold text-blue-600">{stats.leave}</td>
+                        <td className="p-4 text-center font-bold text-green-600">{stats?.present || 0}</td>
+                        <td className="p-4 text-center font-bold text-red-500">{stats?.absent || 0}</td>
+                        <td className="p-4 text-center font-bold text-yellow-600">{stats?.late || 0}</td>
+                        <td className="p-4 text-center font-bold text-purple-600">{stats?.sick || 0}</td>
+                        <td className="p-4 text-center font-bold text-blue-600">{stats?.leave || 0}</td>
                       </tr>
                     )
                   })}
@@ -506,7 +616,6 @@ export default function SchoolSystem() {
           </div>
         ) : (
           <div className="grid md:grid-cols-3 gap-6">
-            {/* Ирц бүртгэл хэсэг */}
             <div className="md:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="p-4 bg-gray-50 border-b flex justify-between items-center">
                 <h3 className="font-bold text-gray-700">Ирцийн бүртгэл</h3>
@@ -517,7 +626,6 @@ export default function SchoolSystem() {
                   <tbody>
                     {sortedStudents.filter(s => isTeacher || s.id === myStId).map(s => {
                       const rec = currAtt?.records[s.id] || {status: '', reason: ''};
-                      // Сурагчийн илгээсэн чөлөөний хүсэлт (тухайн өдөр, pending)
                       const lReq = leaveRequests.find(r => r.stId === s.id && r.date === attDate && r.status === 'pending');
                       
                       return (
@@ -573,14 +681,13 @@ export default function SchoolSystem() {
               </div>
             </div>
 
-            {/* Чөлөө хүсэх хэсэг (Сурагч/Эцэг эх) */}
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit sticky top-6">
               <h3 className="text-lg font-bold mb-4 text-gray-800 border-b pb-2">Чөлөө хүсэх</h3>
               {!isTeacher ? (
                 <>
                   <form onSubmit={submitLeaveRequest} className="space-y-4">
                     <input type="date" name="date" required className="w-full p-3 border rounded-xl bg-gray-50 outline-none"/>
-                    <textarea name="reason" placeholder="Шалтгаанаа дэлгэрэнгүй бичнэ үү..." required rows="3" className="w-full p-3 border rounded-xl bg-gray-50 outline-none"></textarea>
+                    <textarea name="reason" placeholder="Шалтгаанаа дэлгэрэнгүй бичнэ үү..." required rows={3} className="w-full p-3 border rounded-xl bg-gray-50 outline-none"></textarea>
                     <button type="submit" className="w-full bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition">Хүсэлт илгээх</button>
                   </form>
                   <div className="mt-6 border-t pt-4">
@@ -612,14 +719,14 @@ export default function SchoolSystem() {
   };
 
   const renderSchedule = () => {
-    const handleUpdate = (shift, dayIdx, hourIdx, val) => {
+    const handleUpdate = (shift: 'shift1' | 'shift2', dayIdx: number, hourIdx: number, val: string) => {
       if(!isTeacher) return;
       const newSch = {...schedule};
       newSch[shift][dayIdx][hourIdx] = val;
       setSchedule(newSch);
     };
 
-    const ShiftTable = ({title, shiftData, shiftKey}) => (
+    const ShiftTable = ({title, shiftData, shiftKey}: {title: string, shiftData: string[][], shiftKey: 'shift1' | 'shift2'}) => (
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 overflow-x-auto">
         <h3 className="text-lg font-bold mb-4 text-blue-900">{title}</h3>
         <table className="w-full text-sm text-center border-collapse">
@@ -661,8 +768,7 @@ export default function SchoolSystem() {
   };
 
   const renderDutySchedule = () => {
-    const handleDutyChange = (day, val) => {
-      // Олон сурагч сонгох тул array хэлбэрээр хадгална (tasal-аар тусгаарлах)
+    const handleDutyChange = (day: string, val: string) => {
       setDutySchedule({...dutySchedule, weekdays: {...dutySchedule.weekdays, [day]: val.split(',').map(v=>v.trim())}});
     };
 
@@ -713,7 +819,7 @@ export default function SchoolSystem() {
                   onChange={e => setDutySchedule({...dutySchedule, currentDeepClean: e.target.value})}
                   disabled={!isTeacher}
                   placeholder="Сурагчдын нэрсийг дээрээс доош жагсааж бичнэ үү..."
-                  rows="4"
+                  rows={4}
                   className={`w-full p-3 border rounded-xl outline-none text-sm ${isTeacher ? 'focus:border-blue-500 bg-yellow-50/50' : 'bg-transparent'}`}
                ></textarea>
              </div>
@@ -736,34 +842,37 @@ export default function SchoolSystem() {
     );
   };
 
-  const renderListWithChecks = (type) => {
+  const renderListWithChecks = (type: 'task' | 'saving') => {
     const list = type === 'task' ? tasks : savings;
     const setList = type === 'task' ? setTasks : setSavings;
     const titleText = type === 'task' ? 'Ангийн ажил' : 'Хуримтлал';
     
-    const addItem = (e) => {
+    const addItem = (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      const newItem = { id: Date.now(), title: e.target.title.value, date: e.target.date.value, showStudents: false };
+      const target = e.target as typeof e.target & {
+        title: { value: string };
+        date: { value: string };
+        reset: () => void;
+      };
+      const newItem: TaskItem = { id: Date.now(), title: target.title.value, date: target.date.value, showStudents: false };
       setList([newItem, ...list]);
-      e.target.reset();
+      target.reset();
     };
 
-    const removeItem = (id) => {
+    const removeItem = (id: number) => {
       setList(list.filter(item => item.id !== id));
-      setSubmissions(submissions.filter(s => !(s.type === type && s.refId === id))); // холбогдох баталгаажуулалтыг устгах
+      setSubmissions(submissions.filter(s => !(s.type === type && s.refId === id)));
     };
 
-    const toggleStudents = (id) => {
+    const toggleStudents = (id: number) => {
       setList(list.map(l => l.id === id ? {...l, showStudents: !l.showStudents} : l));
     };
 
-    // Сурагчийн хийсэн байдал (багшаар баталгаажсан эсэх)
-    const getStudentStatus = (itemId, stId) => {
+    const getStudentStatus = (itemId: number, stId: number) => {
       return submissions.find(s => s.type === type && s.refId === itemId && s.studentId === stId);
     };
 
-    const handleStudentCheck = (itemId, stId, statusType) => {
-      // statusType: 'submit' (сурагч илгээх), 'approve' (багш батлах), 'uncheck' (багш цуцлах)
+    const handleStudentCheck = (itemId: number, stId: number, statusType: 'submit' | 'approve' | 'uncheck') => {
       let newSubs = [...submissions];
       const existingIdx = newSubs.findIndex(s => s.type === type && s.refId === itemId && s.studentId === stId);
       
@@ -773,7 +882,7 @@ export default function SchoolSystem() {
          if(existingIdx === -1) newSubs.push({ id: Date.now(), studentId: stId, type, refId: itemId, status: 'pending' });
       } else if (statusType === 'approve') {
          if(existingIdx >= 0) newSubs[existingIdx].status = 'approved';
-         else newSubs.push({ id: Date.now(), studentId: stId, type, refId: itemId, status: 'approved' }); // шууд батлах
+         else newSubs.push({ id: Date.now(), studentId: stId, type, refId: itemId, status: 'approved' });
       }
       setSubmissions(newSubs);
     };
@@ -867,7 +976,7 @@ export default function SchoolSystem() {
   const renderGrades = () => {
     const displayStudents = isTeacher ? sortedStudents : sortedStudents.filter(s => s.id === myStId);
 
-    const handleAddSubject = (e) => {
+    const handleAddSubject = (e: React.FormEvent) => {
       e.preventDefault();
       if(newSubjName.trim() && !subjects.includes(newSubjName.trim())) {
         setSubjects([...subjects, newSubjName.trim()]);
@@ -876,22 +985,21 @@ export default function SchoolSystem() {
       }
     };
 
-    const removeSubject = (subj) => {
+    const removeSubject = (subj: string) => {
       setSubjects(subjects.filter(s => s !== subj));
     };
 
-    const updateGrade = (stId, subj, val) => {
+    const updateGrade = (stId: number, subj: string, val: string) => {
       setGrades(prev => ({
         ...prev,
         [stId]: { ...prev[stId], [subj]: val === '' ? null : Number(val) }
       }));
     };
 
-    const toggleEditGrade = (stId) => {
+    const toggleEditGrade = (stId: number) => {
       setEditingGrades(prev => ({...prev, [stId]: !prev[stId]}));
     };
 
-    // Бүх сурагчдын дунджийг бодож, эрэмбэлэх (байр эзлүүлэх)
     const studentAverages = sortedStudents.map(s => {
       const stGrades = grades[s.id] || {};
       let total = 0, count = 0;
@@ -902,9 +1010,8 @@ export default function SchoolSystem() {
       return { id: s.id, avg };
     });
     
-    // Дунджаар нь бууруулан эрэмбэлээд байр (rank) олгох
     const sortedByAvg = [...studentAverages].sort((a, b) => (b.avg || 0) - (a.avg || 0));
-    const getRank = (stId) => {
+    const getRank = (stId: number) => {
        const idx = sortedByAvg.findIndex(s => s.id === stId);
        return idx >= 0 && sortedByAvg[idx].avg !== null ? idx + 1 : '-';
     };
@@ -1006,21 +1113,21 @@ export default function SchoolSystem() {
   };
 
   const renderChat = () => {
-    const handleSend = (e) => {
+    const handleSend = (e: React.FormEvent) => {
       e.preventDefault();
       if(!chatInput.trim()) return;
       
-      const newMsg = {
+      const newMsg: ChatMessage = {
         id: Date.now(),
         text: chatInput,
-        sender: user.name,
-        role: user.role,
+        sender: user?.name || 'Unknown',
+        role: user?.role || 'Unknown',
         time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
       };
       
       setChatMessages(prev => ({
         ...prev,
-        [activeChat]: [...prev[activeChat], newMsg]
+        [activeChat]: [...(prev[activeChat] || []), newMsg]
       }));
       setChatInput('');
       setTimeout(() => {
@@ -1032,7 +1139,6 @@ export default function SchoolSystem() {
 
     return (
       <div className="h-[calc(100vh-150px)] flex flex-col bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden animate-fade-in">
-        {/* Chat Tabs */}
         {isTeacher && (
           <div className="flex border-b bg-gray-50">
             <button onClick={() => setActiveChat('student')} className={`flex-1 py-4 font-bold text-sm transition-colors ${activeChat==='student'?'border-b-2 border-blue-600 text-blue-600 bg-white':'text-gray-500 hover:bg-gray-100'}`}>Сурагчдын чат</button>
@@ -1040,11 +1146,10 @@ export default function SchoolSystem() {
           </div>
         )}
         
-        {/* Chat Messages */}
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50" ref={scrollRef}>
           <div className="space-y-6">
             {messages.map((m, i) => {
-              const isMine = m.sender === user.name;
+              const isMine = m.sender === user?.name;
               return (
                 <div key={i} className={`flex flex-col ${isMine ? 'items-end' : 'items-start'}`}>
                   <span className="text-xs text-gray-500 mb-1 ml-1 font-medium">{m.sender}</span>
@@ -1058,7 +1163,6 @@ export default function SchoolSystem() {
           </div>
         </div>
         
-        {/* Chat Input */}
         <form onSubmit={handleSend} className="p-4 bg-white border-t flex gap-3">
           <input 
             type="text" 
@@ -1076,28 +1180,32 @@ export default function SchoolSystem() {
   };
 
   const renderReports = () => {
-    // Багш болон эрх бүхий сурагч (одоогоор бүх сурагч гэж үзье)
-    const canPost = user.role === 'teacher' || user.role === 'student';
+    const canPost = user?.role === 'teacher' || user?.role === 'student';
     
-    const handleReportFile = (e, type) => {
-      const file = e.target.files[0];
+    const handleReportFile = (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'file') => {
+      const file = e.target.files?.[0];
       if(file) {
         const reader = new FileReader();
         reader.onloadend = () => {
-          if(type === 'image') setNewReportFiles(prev => ({...prev, image: reader.result}));
-          else setNewReportFiles(prev => ({...prev, file: reader.result, fileName: file.name}));
+          if(type === 'image') setNewReportFiles(prev => ({...prev, image: reader.result as string}));
+          else setNewReportFiles(prev => ({...prev, file: reader.result as string, fileName: file.name}));
         };
         reader.readAsDataURL(file);
       }
     };
 
-    const addReport = (e) => {
+    const addReport = (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      const newRep = { 
+      const target = e.target as typeof e.target & {
+        title: { value: string };
+        desc: { value: string };
+        reset: () => void;
+      };
+      const newRep: ReportItem = { 
         id: Date.now(), 
-        title: e.target.title.value, 
-        desc: e.target.desc.value, 
-        author: user.name, 
+        title: target.title.value, 
+        desc: target.desc.value, 
+        author: user?.name || 'Unknown', 
         date: new Date().toLocaleDateString(),
         image: newReportFiles.image,
         file: newReportFiles.file,
@@ -1105,7 +1213,7 @@ export default function SchoolSystem() {
       };
       setReports([newRep, ...reports]);
       setNewReportFiles({ image: null, file: null, fileName: '' });
-      e.target.reset();
+      target.reset();
       showToast("Тайлан нийтлэгдлээ");
     };
 
@@ -1115,7 +1223,7 @@ export default function SchoolSystem() {
         {canPost && (
            <form onSubmit={addReport} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
              <input type="text" name="title" placeholder="Тайлангийн гарчиг" required className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-blue-400"/>
-             <textarea name="desc" placeholder="Дэлгэрэнгүй тайлбар..." required rows="4" className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-blue-400"></textarea>
+             <textarea name="desc" placeholder="Дэлгэрэнгүй тайлбар..." required rows={4} className="w-full p-3 border rounded-xl bg-gray-50 outline-none focus:ring-2 focus:ring-blue-400"></textarea>
              
              <div className="flex flex-wrap gap-4 items-center">
                 <label className="cursor-pointer text-sm font-bold text-blue-600 bg-blue-50 px-4 py-2 rounded-xl flex items-center gap-2 hover:bg-blue-100 transition border border-blue-100">
@@ -1186,28 +1294,30 @@ export default function SchoolSystem() {
   const renderGallery = () => {
     const createAlbum = () => {
       if(newAlbumName.trim()) {
-        setAlbums([{ id: Date.now(), name: newAlbumName, creator: user.name, photos: [] }, ...albums]);
+        const newAlbum: AlbumItem = { id: Date.now(), name: newAlbumName, creator: user?.name || 'Unknown', photos: [] };
+        setAlbums([newAlbum, ...albums]);
         setNewAlbumName('');
         setShowAlbumModal(false);
         showToast("Цомог үүсгэгдлээ");
       }
     };
     
-    const addPhoto = (albumId, e) => {
+    const addPhoto = (albumId: number, e: React.ChangeEvent<HTMLInputElement>) => {
+      if (!e.target.files) return;
       const files = Array.from(e.target.files);
       files.forEach(file => {
         const reader = new FileReader();
         reader.onloadend = () => {
            setAlbums(prev => prev.map(a => a.id === albumId ? {
              ...a, 
-             photos: [{id: Date.now()+Math.random(), src: reader.result, desc: '', uploader: user.name}, ...a.photos]
+             photos: [{id: Date.now()+Math.random(), src: reader.result as string, desc: '', uploader: user?.name || 'Unknown'}, ...a.photos]
            } : a));
         };
         reader.readAsDataURL(file);
       });
     };
 
-    const updatePhotoDesc = (albumId, photoId, desc) => {
+    const updatePhotoDesc = (albumId: number, photoId: number, desc: string) => {
       setAlbums(prev => prev.map(a => a.id === albumId ? {
         ...a,
         photos: a.photos.map(p => p.id === photoId ? {...p, desc} : p)
@@ -1223,7 +1333,6 @@ export default function SchoolSystem() {
           </button>
         </div>
 
-        {/* Цомог үүсгэх Modal */}
         {showAlbumModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
             <div className="bg-white p-6 rounded-3xl shadow-2xl w-full max-w-sm">
@@ -1278,7 +1387,6 @@ export default function SchoolSystem() {
           ))}
         </div>
 
-        {/* Зураг томоор харах Modal */}
         {expandedImage && (
           <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center animate-fade-in">
              <div className="absolute top-4 right-4 flex gap-4">
@@ -1319,7 +1427,6 @@ export default function SchoolSystem() {
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
       
-      {/* Toast Notification */}
       {toast && (
         <div className="fixed top-4 right-4 z-50 animate-fade-in">
           <div className={`px-6 py-3 rounded-xl shadow-xl font-bold flex items-center gap-3 text-white ${toast.type === 'success' ? 'bg-green-600' : 'bg-red-500'}`}>
@@ -1328,7 +1435,6 @@ export default function SchoolSystem() {
         </div>
       )}
 
-      {/* Sidebar */}
       <div className={`fixed inset-y-0 left-0 z-40 w-64 bg-gray-900 text-white transform transition-transform duration-300 ease-in-out flex flex-col ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}>
         <div className="p-6 border-b border-gray-800">
           <h1 className="text-2xl font-black tracking-wider text-blue-400">11Б АНГИ</h1>
@@ -1353,12 +1459,9 @@ export default function SchoolSystem() {
         </div>
       </div>
 
-      {/* Mobile overlay */}
       {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-30 md:hidden backdrop-blur-sm" onClick={() => setIsSidebarOpen(false)}></div>}
 
-      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
-        {/* Header */}
         <header className="bg-white h-16 border-b border-gray-200 flex items-center px-4 md:px-8 justify-between shrink-0 sticky top-0 z-20 shadow-sm">
           <div className="flex items-center gap-4">
             <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition md:hidden">
@@ -1371,7 +1474,6 @@ export default function SchoolSystem() {
           </div>
         </header>
 
-        {/* Scrollable Content Area */}
         <main className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-50/50">
           <div className="max-w-6xl mx-auto">
             {renderContent()}
