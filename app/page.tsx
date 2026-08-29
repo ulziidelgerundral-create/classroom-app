@@ -42,27 +42,27 @@ const MOCK_REPORTS = [
 ];
 
 export default function SchoolSystem() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState(null); 
-  const [loginRole, setLoginRole] = useState('teacher');
-  const [loginCode, setLoginCode] = useState('');
-  const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [schoolLogo, setSchoolLogo] = useState(null);
-  const [activeTab, setActiveTab] = useState('notes');
-  const [alertMsg, setAlertMsg] = useState(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [user, setUser] = useState<any>(null); 
+  const [loginRole, setLoginRole] = useState<string>('teacher');
+  const [loginCode, setLoginCode] = useState<string>('');
+  const [error, setError] = useState<string>('');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [schoolLogo, setSchoolLogo] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState<string>('notes');
+  const [alertMsg, setAlertMsg] = useState<string | null>(null);
   
-  const [students, setStudents] = useState([]);
-  const [subjects, setSubjects] = useState(initialSubjects);
-  const [teacherNotes, setTeacherNotes] = useState([]);
-  const [reports, setReports] = useState([]);
-  const [attendanceRecords, setAttendanceRecords] = useState([]);
-  const [currentAttDate, setCurrentAttDate] = useState(new Date().toISOString().split('T')[0]);
-  const [classTasks, setClassTasks] = useState([]);
-  const [classSavings, setClassSavings] = useState([]);
-  const [submissions, setSubmissions] = useState([]);
-  const [newsList, setNewsList] = useState([]);
-  const [expandedItems, setExpandedItems] = useState({});
+  const [students, setStudents] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<string[]>(initialSubjects);
+  const [teacherNotes, setTeacherNotes] = useState<any[]>([]);
+  const [reports, setReports] = useState<any[]>([]);
+  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
+  const [currentAttDate, setCurrentAttDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [classTasks, setClassTasks] = useState<any[]>([]);
+  const [classSavings, setClassSavings] = useState<any[]>([]);
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [newsList, setNewsList] = useState<any[]>([]);
+  const [expandedItems, setExpandedItems] = useState<any>({});
 
   useEffect(() => {
     fetchInitialData();
@@ -80,7 +80,7 @@ export default function SchoolSystem() {
       setReports(MOCK_REPORTS);
       
       const today = new Date().toISOString().split('T')[0];
-      const initialRecords = {};
+      const initialRecords: any = {};
       MOCK_STUDENTS.forEach(s => initialRecords[s.id] = 'present');
       setAttendanceRecords([{ date: today, records: initialRecords }]);
       
@@ -88,7 +88,7 @@ export default function SchoolSystem() {
     }, 500);
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = (e: any) => {
     e.preventDefault();
     setError('');
 
@@ -124,12 +124,12 @@ export default function SchoolSystem() {
     setShowPassword(false);
   };
 
-  const showAlert = (msg) => {
+  const showAlert = (msg: string) => {
     setAlertMsg(msg);
     setTimeout(() => setAlertMsg(null), 3000);
   };
 
-  const handleLogoUpload = (e) => {
+  const handleLogoUpload = (e: any) => {
     if (user?.role !== 'teacher') return;
     const file = e.target.files[0];
     if (file) {
@@ -137,9 +137,9 @@ export default function SchoolSystem() {
       reader.onloadend = () => setSchoolLogo(reader.result);
       reader.readAsDataURL(file);
     }
-  }; // <-- ALDAA ENE HESGIIN HAALTIIG HAAH DEDDUU BAISAN.
+  };
 
-  const handleAddStudent = async (e) => {
+  const handleAddStudent = async (e: any) => {
     e.preventDefault();
     const fd = new FormData(e.target);
     const name = fd.get('name');
@@ -153,7 +153,7 @@ export default function SchoolSystem() {
       name, 
       studentCode: sCode, 
       parentCode: pCode, 
-      grades: subjects.reduce((acc, sub) => ({...acc, [sub]: 0}), {}) 
+      grades: subjects.reduce((acc: any, sub: string) => ({...acc, [sub]: 0}), {}) 
     };
     
     setStudents([...students, newStudent]);
@@ -161,15 +161,15 @@ export default function SchoolSystem() {
     showAlert("Сурагч нэмэгдлээ");
   };
 
-  const handleRemoveStudent = async (id) => {
+  const handleRemoveStudent = async (id: any) => {
     setStudents(students.filter(s => s.id !== id));
     showAlert("Сурагч хасагдлаа");
   };
 
-  const handleAddSubject = async (e) => {
+  const handleAddSubject = async (e: any) => {
     e.preventDefault();
     const fd = new FormData(e.target);
-    const subName = fd.get('subjectName');
+    const subName = fd.get('subjectName') as string;
     if(!subName) return;
     
     if(!subjects.includes(subName)) {
@@ -181,7 +181,7 @@ export default function SchoolSystem() {
     e.target.reset();
   };
 
-  const handleRemoveSubject = async (subName) => {
+  const handleRemoveSubject = async (subName: string) => {
     const newSubjects = subjects.filter(s => s !== subName);
     setSubjects(newSubjects);
     
@@ -194,14 +194,14 @@ export default function SchoolSystem() {
     showAlert("Хичээл хасагдлаа");
   };
 
-  const handleGradeChange = async (studentId, subject, val) => {
+  const handleGradeChange = async (studentId: any, subject: string, val: any) => {
     const num = parseInt(val) || 0;
     const student = students.find(s => s.id === studentId);
     const newGrades = { ...student.grades, [subject]: num };
     setStudents(students.map(s => s.id === studentId ? { ...s, grades: newGrades } : s));
   };
 
-  const handleStudentSubmit = async (type, refId) => {
+  const handleStudentSubmit = async (type: string, refId: any) => {
     if (user?.role !== 'student') return;
     const newSub = { 
       id: Date.now(), 
@@ -214,11 +214,11 @@ export default function SchoolSystem() {
     showAlert("Хүсэлт илгээгдлээ. Багш баталгаажуулахыг хүлээнэ үү.");
   };
 
-  const handleTeacherApprove = async (subId) => {
+  const handleTeacherApprove = async (subId: any) => {
     setSubmissions(submissions.map(s => s.id === subId ? { ...s, status: 'approved' } : s));
   };
 
-  const handleTeacherDirectMark = async (studentId, type, refId) => {
+  const handleTeacherDirectMark = async (studentId: any, type: string, refId: any) => {
     if (user?.role !== 'teacher') return;
     const newSub = { 
       id: Date.now(), 
@@ -231,7 +231,7 @@ export default function SchoolSystem() {
     showAlert("Амжилттай тэмдэглэгдлээ");
   };
 
-  const handleTeacherUndo = async (subId) => {
+  const handleTeacherUndo = async (subId: any) => {
     if (user?.role !== 'teacher') return;
     setSubmissions(submissions.filter(s => s.id !== subId));
     showAlert("Тэмдэглэгээ цуцлагдлаа");
@@ -239,9 +239,9 @@ export default function SchoolSystem() {
 
   const sortedStudents = useMemo(() => {
     const withAvg = students.map(s => {
-      const gVals = Object.values(s.grades || {});
-      const avg = gVals.length > 0 ? (gVals.reduce((a,b)=>a+b,0)/gVals.length).toFixed(1) : 0;
-      return { ...s, average: parseFloat(avg) };
+      const gVals: any[] = Object.values(s.grades || {});
+      const avg = gVals.length > 0 ? (gVals.reduce((a: number, b: number) => a + b, 0) / gVals.length).toFixed(1) : 0;
+      return { ...s, average: parseFloat(avg as string) };
     });
     
     withAvg.sort((a, b) => a.name.localeCompare(b.name));
@@ -357,7 +357,7 @@ export default function SchoolSystem() {
   );
 
   const renderNav = () => {
-    let tabs = [];
+    let tabs: any[] = [];
     if (user.role === 'teacher') {
       tabs = [
         { id: 'notes', icon: <File size={18} />, label: 'Тэмдэглэл' },
@@ -483,17 +483,17 @@ export default function SchoolSystem() {
   const renderAttendance = () => {
     let todayRecordObj = attendanceRecords.find(r => r.date === currentAttDate);
     if(!todayRecordObj && user.role === 'teacher') {
-      const newRec = { date: currentAttDate, records: {} };
+      const newRec = { date: currentAttDate, records: {} as any };
       students.forEach(s => newRec.records[s.id] = 'present');
       todayRecordObj = newRec;
     }
     const todayRecords = todayRecordObj?.records || {};
 
-    const handleAttChange = async (studentId, status) => {
+    const handleAttChange = async (studentId: any, status: string) => {
       let updatedList = [...attendanceRecords];
       const dateIndex = updatedList.findIndex(r => r.date === currentAttDate);
       
-      let newRecordsObj = {};
+      let newRecordsObj: any = {};
       if(dateIndex >= 0) {
         newRecordsObj = { ...updatedList[dateIndex].records, [studentId]: status };
         updatedList[dateIndex].records = newRecordsObj;
@@ -606,11 +606,11 @@ export default function SchoolSystem() {
     );
   };
 
-  const renderTasksList = (listType) => {
+  const renderTasksList = (listType: string) => {
     const list = listType === 'task' ? classTasks : classSavings;
     const title = listType === 'task' ? 'Ангийн ажил' : 'Хуримтлал';
 
-    const handleAdd = async (e) => {
+    const handleAdd = async (e: any) => {
       e.preventDefault();
       if(user.role !== 'teacher') return;
       const titleVal = e.target.title.value;
@@ -628,7 +628,7 @@ export default function SchoolSystem() {
       e.target.reset();
     };
 
-    const toggleExpand = (itemId) => setExpandedItems(prev => ({...prev, [itemId]: !prev[itemId]}));
+    const toggleExpand = (itemId: any) => setExpandedItems((prev: any) => ({...prev, [itemId]: !prev[itemId]}));
 
     return (
       <div className="bg-white rounded-3xl p-6 shadow-sm border border-blue-100">
@@ -706,7 +706,7 @@ export default function SchoolSystem() {
   };
 
   const renderReports = () => {
-    const handleAddReport = async (e) => {
+    const handleAddReport = async (e: any) => {
       e.preventDefault();
       const title = e.target.title.value;
       const desc = e.target.desc.value;
@@ -732,7 +732,7 @@ export default function SchoolSystem() {
             <h3 className="text-lg font-black text-gray-800 mb-4">Шинэ тайлан оруулах</h3>
             <form onSubmit={handleAddReport} className="space-y-4">
               <input type="text" name="title" placeholder="Тайлангийн гарчиг" className="w-full border-2 border-blue-100 bg-blue-50/50 rounded-xl px-4 py-3 font-bold outline-none focus:border-blue-500" required/>
-              <textarea name="desc" placeholder="Дэлгэрэнгүй тайлбар..." rows="3" className="w-full border-2 border-blue-100 bg-blue-50/50 rounded-xl px-4 py-3 font-medium outline-none focus:border-blue-500 resize-none"></textarea>
+              <textarea name="desc" placeholder="Дэлгэрэнгүй тайлбар..." rows={3} className="w-full border-2 border-blue-100 bg-blue-50/50 rounded-xl px-4 py-3 font-medium outline-none focus:border-blue-500 resize-none"></textarea>
               <div className="flex justify-between items-center">
                 <div className="flex gap-2">
                   <button type="button" className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"><ImageIcon size={20}/></button>
@@ -767,7 +767,7 @@ export default function SchoolSystem() {
   const renderNotes = () => {
     if(user.role !== 'teacher') return null;
 
-    const handleAddNote = async (e) => {
+    const handleAddNote = async (e: any) => {
       e.preventDefault();
       const text = e.target.note.value;
       const date = e.target.date.value;
@@ -785,11 +785,11 @@ export default function SchoolSystem() {
       e.target.reset();
     };
 
-    const toggleNote = async (id, isDone) => {
+    const toggleNote = async (id: any, isDone: any) => {
       setTeacherNotes(teacherNotes.map(n => n.id === id ? {...n, isDone: !n.isDone} : n));
     };
     
-    const removeNote = async (id) => {
+    const removeNote = async (id: any) => {
       setTeacherNotes(teacherNotes.filter(n => n.id !== id));
     };
 
@@ -826,7 +826,7 @@ export default function SchoolSystem() {
   };
 
   const renderNews = () => {
-    const handleAddNews = async (e) => {
+    const handleAddNews = async (e: any) => {
       e.preventDefault();
       const title = e.target.title.value;
       const content = e.target.content.value;
@@ -851,7 +851,7 @@ export default function SchoolSystem() {
             <h3 className="text-lg font-black text-gray-800 mb-4">Шинэ мэдээлэл оруулах</h3>
             <form onSubmit={handleAddNews} className="space-y-4">
               <input type="text" name="title" placeholder="Мэдээний гарчиг" className="w-full border-2 border-blue-100 bg-blue-50/50 rounded-xl px-4 py-3 font-bold outline-none focus:border-blue-500" required/>
-              <textarea name="content" placeholder="Дэлгэрэнгүй..." rows="3" className="w-full border-2 border-blue-100 bg-blue-50/50 rounded-xl px-4 py-3 font-medium outline-none focus:border-blue-500 resize-none" required></textarea>
+              <textarea name="content" placeholder="Дэлгэрэнгүй..." rows={3} className="w-full border-2 border-blue-100 bg-blue-50/50 rounded-xl px-4 py-3 font-medium outline-none focus:border-blue-500 resize-none" required></textarea>
               <div className="flex justify-end">
                 <button type="submit" className="bg-blue-600 text-white px-6 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-md">
                   <Send size={16}/> Нийтлэх
