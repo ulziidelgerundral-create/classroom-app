@@ -9,7 +9,6 @@ import {
 
 const initialSubjects = ["Математик", "Монгол хэл", "Англи хэл", "Мэдээлэл зүй"];
 
-// Хуурамч өгөгдлүүд (Mock Data)
 const MOCK_STUDENTS = [
   { id: 1, name: 'Б.Анар', studentCode: 'S01', parentCode: 'P01', grades: { "Математик": 95, "Монгол хэл": 88, "Англи хэл": 92, "Мэдээлэл зүй": 90 } },
   { id: 2, name: 'Ц.Бат', studentCode: 'S02', parentCode: 'P02', grades: { "Математик": 82, "Монгол хэл": 75, "Англи хэл": 80, "Мэдээлэл зүй": 85 } },
@@ -43,22 +42,16 @@ const MOCK_REPORTS = [
 ];
 
 export default function SchoolSystem() {
-  // Ачаалж байгаа эсэх
   const [isLoading, setIsLoading] = useState(true);
-
-  // Authentication states
   const [user, setUser] = useState(null); 
   const [loginRole, setLoginRole] = useState('teacher');
   const [loginCode, setLoginCode] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-
-  // Global App States
   const [schoolLogo, setSchoolLogo] = useState(null);
   const [activeTab, setActiveTab] = useState('notes');
   const [alertMsg, setAlertMsg] = useState(null);
   
-  // Database States
   const [students, setStudents] = useState([]);
   const [subjects, setSubjects] = useState(initialSubjects);
   const [teacherNotes, setTeacherNotes] = useState([]);
@@ -71,14 +64,12 @@ export default function SchoolSystem() {
   const [newsList, setNewsList] = useState([]);
   const [expandedItems, setExpandedItems] = useState({});
 
-  // Mock-ээс бүх мэдээллийг татах
   useEffect(() => {
     fetchInitialData();
   }, []);
 
   const fetchInitialData = async () => {
     setIsLoading(true);
-    // Simulate network delay
     setTimeout(() => {
       setStudents(MOCK_STUDENTS);
       setNewsList(MOCK_NEWS);
@@ -87,7 +78,7 @@ export default function SchoolSystem() {
       setClassSavings(MOCK_CLASS_TASKS.filter(c => c.type === 'saving'));
       setSubmissions(MOCK_SUBMISSIONS);
       setReports(MOCK_REPORTS);
-      // Initialize some attendance data for today
+      
       const today = new Date().toISOString().split('T')[0];
       const initialRecords = {};
       MOCK_STUDENTS.forEach(s => initialRecords[s.id] = 'present');
@@ -146,8 +137,8 @@ export default function SchoolSystem() {
       reader.onloadend = () => setSchoolLogo(reader.result);
       reader.readAsDataURL(file);
     }
-  // --- CRUD Operations (Mock sync) ---
-  
+  }; // <-- ALDAA ENE HESGIIN HAALTIIG HAAH DEDDUU BAISAN.
+
   const handleAddStudent = async (e) => {
     e.preventDefault();
     const fd = new FormData(e.target);
@@ -158,7 +149,7 @@ export default function SchoolSystem() {
     if(!name || !sCode || !pCode) return showAlert("Бүх талбарыг бөглөнө үү");
     
     const newStudent = { 
-      id: Date.now(), // Generate a unique ID
+      id: Date.now(),
       name, 
       studentCode: sCode, 
       parentCode: pCode, 
@@ -200,7 +191,6 @@ export default function SchoolSystem() {
       return {...s, grades: newGrades};
     });
     setStudents(updatedStudents);
-
     showAlert("Хичээл хасагдлаа");
   };
 
@@ -208,7 +198,6 @@ export default function SchoolSystem() {
     const num = parseInt(val) || 0;
     const student = students.find(s => s.id === studentId);
     const newGrades = { ...student.grades, [subject]: num };
-    
     setStudents(students.map(s => s.id === studentId ? { ...s, grades: newGrades } : s));
   };
 
@@ -248,7 +237,6 @@ export default function SchoolSystem() {
     showAlert("Тэмдэглэгээ цуцлагдлаа");
   };
 
-  // Derived state for sorting and ranking
   const sortedStudents = useMemo(() => {
     const withAvg = students.map(s => {
       const gVals = Object.values(s.grades || {});
@@ -256,7 +244,7 @@ export default function SchoolSystem() {
       return { ...s, average: parseFloat(avg) };
     });
     
-    withAvg.sort((a, b) => a.name.localeCompare(b.name)); // Цагаан толгойн дараалал
+    withAvg.sort((a, b) => a.name.localeCompare(b.name));
     
     const ranked = [...withAvg].sort((a, b) => b.average - a.average);
     return withAvg.map(s => {
@@ -265,7 +253,6 @@ export default function SchoolSystem() {
     });
   }, [students, subjects]);
 
-  // Loading Screen
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
@@ -277,7 +264,6 @@ export default function SchoolSystem() {
     );
   }
 
-  // Login Screen
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-100 font-sans p-4 relative overflow-hidden">
@@ -331,7 +317,6 @@ export default function SchoolSystem() {
     );
   }
 
-  // --- Header & Navigation ---
   const renderHeader = () => (
     <header className="bg-white border-b border-blue-100 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 h-20 flex justify-between items-center">
@@ -416,8 +401,6 @@ export default function SchoolSystem() {
     );
   };
 
-  // --- Components ---
-  
   const renderGrades = () => {
     if (user.role !== 'teacher') {
       const myData = sortedStudents.find(s => s.id === user.data.id);
