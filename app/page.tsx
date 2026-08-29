@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   BookOpen, Users, Calendar, CheckSquare, 
