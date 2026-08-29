@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { 
   BookOpen, Users, Calendar, CheckSquare, 
@@ -83,7 +85,7 @@ const INITIAL_NOTES: Note[] = [
 
 const INITIAL_NEWS: NewsItem[] = [
   { id: 1, title: 'Хаврын сарын академик амралт эхлэх өдөр', content: '3-р сарын 25-наас эхлэн 1 долоо хоног сурагчдын амралт эхэлнэ.', date: '2025-03-01', category: 'Зарлал', author: 'Захиргаа' },
-  { id: 2, title: 'Математикийн олимпиад болох тухай', content: 'Сургуулийн аварга шалгаруулах Математикийн олимпиад ирэх Баасан гарагт болно.', date: '2025-03-02', category: 'Тэмцээн', author: 'Сургалтын алба' }
+  { id: 2, title: 'Математикийн олимпиад болох тухай', content: 'Сургуулийн аварга шалгаруулах Математикийн олимпиадад ирэх Баасан гарагт болно.', date: '2025-03-02', category: 'Тэмцээн', author: 'Сургалтын алба' }
 ];
 
 const INITIAL_PAYMENTS: Payment[] = [
@@ -94,7 +96,7 @@ const INITIAL_PAYMENTS: Payment[] = [
 
 export default function App() {
   // Нэвтрэх болон хэрэглэгчийн төлөв
-  const [role, setRole] = 'teacher' | 'student' | 'parent' | 'admin'>('teacher');
+  const [role, setRole] = useState<Role>('teacher');
   const [currentUserCode, setCurrentUserCode] = useState('S01');
   const [activeTab, setActiveTab] = useState('notes');
   const [alertMsg, setAlertMsg] = useState('');
@@ -108,7 +110,6 @@ export default function App() {
   // Формын төлөвүүд
   const [newNote, setNewNote] = useState({ title: '', subject: INITIAL_SUBJECTS[0], content: '' });
   const [newNews, setNewNews] = useState({ title: '', content: '', category: 'Зарлал' });
-  const [searchQuery, setSearchQuery] = useState('');
 
   const showAlert = (msg: string) => {
     setAlertMsg(msg);
@@ -175,7 +176,7 @@ export default function App() {
 
   // Толгой хэсэг (Header)
   const renderHeader = () => (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-3">
@@ -192,33 +193,37 @@ export default function App() {
             {/* Эрх солих товчлуурууд */}
             <div className="bg-gray-100 p-1 rounded-xl flex items-center space-x-1 border border-gray-200">
               <button
+                type="button"
                 onClick={() => setRole('teacher')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                  role === 'teacher' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  role === 'teacher' ? 'bg-white text-blue-600 shadow-xs' : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
                 Багш
               </button>
               <button
+                type="button"
                 onClick={() => setRole('student')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                  role === 'student' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  role === 'student' ? 'bg-white text-blue-600 shadow-xs' : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
                 Сурагч
               </button>
               <button
+                type="button"
                 onClick={() => setRole('parent')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                  role === 'parent' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  role === 'parent' ? 'bg-white text-blue-600 shadow-xs' : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
                 Эцэг эх
               </button>
               <button
+                type="button"
                 onClick={() => setRole('admin')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                  role === 'admin' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-900'
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  role === 'admin' ? 'bg-white text-blue-600 shadow-xs' : 'text-gray-600 hover:text-gray-900'
                 }`}
               >
                 Админ
@@ -242,11 +247,12 @@ export default function App() {
 
   // Навигацийн цэс
   const renderNav = () => (
-    <nav className="bg-white border-b border-gray-200 shadow-xs">
+    <nav className="bg-white border-b border-gray-200 shadow-2xs">
       <div className="max-w-7xl mx-auto px-4 flex space-x-1 overflow-x-auto">
         <button
+          type="button"
           onClick={() => setActiveTab('notes')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 whitespace-nowrap transition-colors ${
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
             activeTab === 'notes' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800'
           }`}
         >
@@ -254,8 +260,9 @@ export default function App() {
           Тэмдэглэл & Даалгавар
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('news')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 whitespace-nowrap transition-colors ${
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
             activeTab === 'news' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800'
           }`}
         >
@@ -263,8 +270,9 @@ export default function App() {
           Сургуулийн мэдээ
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('grades')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 whitespace-nowrap transition-colors ${
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
             activeTab === 'grades' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800'
           }`}
         >
@@ -272,8 +280,9 @@ export default function App() {
           Дүнгийн бүртгэл
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('timetable')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 whitespace-nowrap transition-colors ${
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
             activeTab === 'timetable' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800'
           }`}
         >
@@ -281,8 +290,9 @@ export default function App() {
           Хуваарь
         </button>
         <button
+          type="button"
           onClick={() => setActiveTab('payments')}
-          className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 whitespace-nowrap transition-colors ${
+          className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
             activeTab === 'payments' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-800'
           }`}
         >
@@ -297,7 +307,7 @@ export default function App() {
   const renderNotes = () => (
     <div className="space-y-6">
       {(role === 'teacher' || role === 'admin') && (
-        <form onSubmit={handleAddNote} className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+        <form onSubmit={handleAddNote} className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-4">
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
             <Plus className="text-blue-600" size={20} /> Шинэ тэмдэглэл, даалгавар нэмэх
           </h3>
@@ -307,13 +317,13 @@ export default function App() {
               placeholder="Гарчиг..."
               value={newNote.title}
               onChange={(e) => setNewNote({ ...newNote, title: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
               required
             />
             <select
               value={newNote.subject}
               onChange={(e) => setNewNote({ ...newNote, subject: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
             >
               {INITIAL_SUBJECTS.map((s) => (
                 <option key={s} value={s}>{s}</option>
@@ -325,12 +335,12 @@ export default function App() {
             rows={3}
             value={newNote.content}
             onChange={(e) => setNewNote({ ...newNote, content: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
             required
           />
           <button
             type="submit"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-md"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl transition-all flex items-center gap-2 shadow-md cursor-pointer"
           >
             <Send size={18} /> Нэмэх
           </button>
@@ -339,7 +349,7 @@ export default function App() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {notes.map((n) => (
-          <div key={n.id} className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow relative">
+          <div key={n.id} className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs hover:shadow-md transition-shadow relative">
             <div className="flex justify-between items-start mb-3">
               <span className="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1 rounded-full border border-blue-100">
                 {n.subject}
@@ -348,7 +358,7 @@ export default function App() {
             </div>
             <h4 className="text-lg font-bold text-gray-900 mb-2">{n.title}</h4>
             <p className="text-gray-600 text-sm leading-relaxed mb-4">{n.content}</p>
-            <div className="text-xs text-gray-400 border-t pt-3 flex justify-between items-center">
+            <div className="text-xs text-gray-400 border-t border-gray-100 pt-3 flex justify-between items-center">
               <span>Нийтэлсэн: {n.author}</span>
             </div>
           </div>
@@ -361,7 +371,7 @@ export default function App() {
   const renderNews = () => (
     <div className="space-y-6">
       {role === 'admin' && (
-        <form onSubmit={handleAddNews} className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+        <form onSubmit={handleAddNews} className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-4">
           <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
             <Bell className="text-blue-600" size={20} /> Шинэ мэдээ зарлах
           </h3>
@@ -371,13 +381,13 @@ export default function App() {
               placeholder="Мэдээний гарчиг..."
               value={newNews.title}
               onChange={(e) => setNewNews({ ...newNews, title: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
               required
             />
             <select
               value={newNews.category}
               onChange={(e) => setNewNews({ ...newNews, category: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
             >
               <option value="Зарлал">Зарлал</option>
               <option value="Тэмцээн">Тэмцээн</option>
@@ -389,12 +399,12 @@ export default function App() {
             rows={3}
             value={newNews.content}
             onChange={(e) => setNewNews({ ...newNews, content: e.target.value })}
-            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
             required
           />
           <button
             type="submit"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl transition-all shadow-md"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-2.5 rounded-xl transition-all shadow-md cursor-pointer"
           >
             Нийтлэх
           </button>
@@ -403,7 +413,7 @@ export default function App() {
 
       <div className="space-y-4">
         {newsList.map((news) => (
-          <div key={news.id} className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
+          <div key={news.id} className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs">
             <div className="flex items-center gap-3 mb-2">
               <span className="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">
                 {news.category}
@@ -420,7 +430,7 @@ export default function App() {
 
   // Дүнгийн хэсэг
   const renderGrades = () => (
-    <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
+    <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-lg font-bold text-gray-900">Сурагчдын дүнгүүд</h3>
@@ -451,7 +461,7 @@ export default function App() {
                         type="number"
                         value={st.grades[subj] || 0}
                         onChange={(e) => handleGradeChange(st.id, subj, Number(e.target.value))}
-                        className="w-16 px-2 py-1 border border-gray-300 rounded-lg text-center font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        className="w-16 px-2 py-1 border border-gray-300 rounded-lg text-center font-bold text-gray-800 focus:ring-2 focus:ring-blue-500 focus:outline-hidden"
                       />
                     </td>
                   ))}
@@ -485,7 +495,7 @@ export default function App() {
 
   // Төлбөр
   const renderPayments = () => (
-    <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-6">
+    <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-6">
       <h3 className="text-lg font-bold text-gray-900">Санхүү болон Төлбөр тооцоо</h3>
       <div className="space-y-3">
         {payments.map((p) => (
@@ -510,12 +520,12 @@ export default function App() {
 
   // Хуваарь
   const renderTimetable = () => (
-    <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-4">
+    <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-xs space-y-4">
       <h3 className="text-lg font-bold text-gray-900">7 хоногийн хичээлийн хуваарь</h3>
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         {['Даваа', 'Мягмар', 'Лхагва', 'Пүрэв', 'Баасан'].map((day, idx) => (
           <div key={day} className="border border-gray-200 rounded-xl p-4 bg-gray-50">
-            <h4 className="font-bold text-blue-700 mb-3 border-b pb-2 text-center">{day}</h4>
+            <h4 className="font-bold text-blue-700 mb-3 border-b border-gray-200 pb-2 text-center">{day}</h4>
             <div className="space-y-2 text-xs font-semibold text-gray-700">
               <div className="p-2 bg-white rounded-lg shadow-2xs">1. Математик (08:30)</div>
               <div className="p-2 bg-white rounded-lg shadow-2xs">2. Англи хэл (09:30)</div>
