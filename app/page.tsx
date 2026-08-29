@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
   BookOpen, Users, User, Calendar, CheckSquare, MessageSquare, 
   Award, TrendingUp, Bell, Settings, LogOut, Send, CheckCircle, 
@@ -15,17 +15,18 @@ const initialStudents = [
 ];
 
 export default function SchoolSystem() {
-  const [user, setUser] = useState(null); 
+  // TypeScript-д зориулж <any> нэмсэн
+  const [user, setUser] = useState<any>(null); 
   const [loginRole, setLoginRole] = useState('student');
   const [loginCode, setLoginCode] = useState('');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [activeTab, setActiveTab] = useState('notes');
-  const [students, setStudents] = useState(initialStudents);
-  const [news, setNews] = useState([]);
-  const [logo, setLogo] = useState(null);
+  const [students, setStudents] = useState<any>(initialStudents);
+  const [logo, setLogo] = useState<any>(null);
 
-  const handleLogin = (e) => {
+  // Параметрт : any нэмсэн
+  const handleLogin = (e: any) => {
     e.preventDefault();
     setError('');
 
@@ -33,13 +34,13 @@ export default function SchoolSystem() {
       setUser({ role: 'teacher', name: 'Багш' });
       setActiveTab('notes');
     } else if (loginRole === 'student') {
-      const student = students.find(s => s.code === loginCode);
+      const student = students.find((s: any) => s.code === loginCode);
       if (student) {
         setUser({ role: 'student', ...student });
         setActiveTab('attendance');
       } else setError('Сурагчийн код буруу байна.');
     } else if (loginRole === 'parent') {
-      const student = students.find(s => s.parentCode === loginCode);
+      const student = students.find((s: any) => s.parentCode === loginCode);
       if (student) {
         setUser({ role: 'parent', studentName: student.name, ...student });
         setActiveTab('attendance');
@@ -56,7 +57,8 @@ export default function SchoolSystem() {
     setShowPassword(false);
   };
 
-  const handleLogoUpload = (e) => {
+  // Параметрт : any нэмсэн
+  const handleLogoUpload = (e: any) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -147,7 +149,7 @@ export default function SchoolSystem() {
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          {menuItems.filter(item => item.roles.includes(user.role)).map((item) => (
+          {menuItems.filter((item: any) => item.roles.includes(user.role)).map((item: any) => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
